@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/apikit http://www.mulesoft.org/schema/mule/apikit/current/mule-apikit.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd">
+    <flow name="ms3contact-main">
+        <http:listener config-ref="ms3contact-httpListenerConfig" path="/api/*" doc:name="HTTP"/>
+        <apikit:router config-ref="ms3contact-config" doc:name="APIkit Router"/>
+        <exception-strategy ref="ms3contact-apiKitGlobalExceptionMapping" doc:name="Reference Exception Strategy"/>
+    </flow>
+    <flow name="ms3contact-console">
+        <http:listener config-ref="ms3contact-httpListenerConfig" path="/console/*" doc:name="HTTP"/>
+        <apikit:console config-ref="ms3contact-config" doc:name="APIkit Console"/>
+    </flow>
+   
+    <flow name="get:/healthcheck:ms3contact-config">
+        <set-payload value="{&#xA;  &quot;api-status&quot; : &quot;alive&quot;&#xA;}" doc:name="Set Payload"/>
+    </flow>
+    <flow name="post:/contact:application/json:ms3contact-config">
+        <logger message="payload coming in request  : #[message.payloadAs(java.lang.String)]" level="INFO" doc:name="Logger"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-variable variableName="payloadVar"><![CDATA[%dw 1.0
+%output application/java
+---
+payload]]></dw:set-variable>
+        </dw:transform-message>
+        <set-variable variableName="IDVar" value="10" doc:name="IDVar"/>
+        <set-variable variableName="create" value="#[[]]" doc:name="Variable"/>
+        <dw:transform-message doc:name="Head Query">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+flowVars.payloadVar.Communication]]></dw:set-payload>
+            <dw:set-variable variableName="identification"><![CDATA[%dw 1.0
+%output application/java
+%var FirstName = payload.Identification.FirstName default ''
+%var LastName = payload.Identification.LastName default ''
+%var DOB = payload.Identification.DOB default ''
+%var Gender = payload.Identification.Gender default ''
+%var Title = payload.Identification.Title default ''
+%var ID = (flowVars.IDVar + 1) as :number
+%var AddressStreet = payload.Address[0].street default ''
+%var AddressUnit = payload.Address[0].Unit default ''
+%var AddressCity = payload.Address[0].City default ''
+%var AddressState = payload.Address[0].State default ''
+%var AddressZipcode = payload.Address[0].zipcode default ''
+%var AddressNumber = payload.Address[0].number default ''
+%var Addresstype = payload.Address[0].type default 'home'
+---
+"INSERT INTO CONTACTS (ID ,FIRST_NAME,LAST_NAME, DOB ,GENDER ,TITLE, ADDRESS, COMMUNICATION)  VALUES (" 
+++ ID ++ ",'" ++ FirstName ++ "','" ++ LastName ++ "','" ++ DOB ++ "','" ++ Gender ++ "','" ++ Title ++ "','" ++ AddressStreet ++ "','" ++ AddressUnit ++ "','" ++ AddressCity ++ "','" ++ 
+AddressState ++ "','" ++  AddressZipcode ++ "','" ++ AddressNumber ++ "'," ++ Addresstype 
+]]></dw:set-variable>
+
+        </dw:transform-message>
+        <foreach doc:name="For Each">
+            <dw:transform-message doc:name="Transform Message">
+                <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+%var typeVar = payload.type default ''
+%var value = payload.value default 0
+%var preferred = payload.preferred default "'"
+---
+flowVars.identification ++ ","
+++ typeVar ++ "'," ++ value ++ ",'" ++ preferred ++ ")"
+]]></dw:set-payload>
+            </dw:transform-message>
+            <expression-filter expression="#[flowVars.create.add(payload)]" nullReturnsTrue="true" doc:name="Expression"/>
+        </foreach>
+        <set-payload value="#[flowVars.create]" doc:name="Set Payload"/>
+        <foreach doc:name="For Each">
+            <dw:transform-message doc:name="Transform Message">
+                <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+payload]]></dw:set-payload>
+            </dw:transform-message>
+            <logger message="Input to the database : #[payload]" level="INFO" doc:name="Create Database Query"/>
+        </foreach>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+  "Response": {
+    "status": "Successfully created",
+    "id": flowVars.IDVar
+  }
+}]]></dw:set-payload>
+        </dw:transform-message>
+
+    </flow>
+</mule>

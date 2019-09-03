@@ -1,0 +1,11 @@
+{
+  "Response": {
+    "status": "E",
+    "id": 123,
+    "error_description": {
+      "error_code": "1000",
+      "error_summary": "error_summary",
+      "error_detail": "error_detail"
+    }
+  }
+}

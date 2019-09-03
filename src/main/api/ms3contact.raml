@@ -1,0 +1,129 @@
+#%RAML 1.0
+title: contact-api
+version: 1.0
+description: Contact APIs
+baseUri: http://localhost:8081/api/contact
+types: 
+  requestschema: !include schemas/integration_request.schema.json
+  responseschema: !include schemas/integration_response.schema.json
+  
+traits:
+  commonHeader:
+    headers:      
+      x-api-key:
+         description: "API Key used to authenticate the user"
+         type: string
+         required: true
+         default: "YHet8GGHsi7WPaOQ1NYFG8BGNWpZ6ZeNsY2mTVb3"
+      Content-Type:        
+         type: string
+         required: true
+         default: "application/json"
+
+
+/contacts:
+  /{contactName}:
+     get:  
+      responses:
+        200:   
+          body:
+            application/json:            
+        400:
+          description: Business error       
+          body:
+            application/json:
+              type: responseschema
+              example: !include examples/error-response.json
+        500:
+          description: System error  
+          body:
+            application/json: 
+   
+/contact:
+    description: | 
+      "This service gives you the feature to create/update/delete/get the products to/from the Database"
+    post:
+      is: [commonHeader]
+      body:
+        application/json:
+          type: requestschema
+          example: !include examples/sample-request.json
+      responses:
+        200:   
+          body:
+            application/json:
+             type: responseschema
+             example: !include examples/success-response.json
+        400:
+          description: Business error       
+          body:
+            application/json:
+              type: responseschema
+              example: !include examples/error-response.json
+        500:
+          description: System error  
+          body:
+            application/json:
+              type: responseschema
+              example: !include examples/error-response.json
+                        
+    
+    put:
+      is: [commonHeader]
+      body:
+        application/json:
+          type: requestschema
+          example: !include examples/sample-request.json
+      responses:
+        200:   
+          body:
+            application/json:
+             type: responseschema
+             example: !include examples/success-response.json
+        400:
+          description: Business error       
+          body:
+            application/json:
+              type: responseschema
+              example: !include examples/error-response.json
+        500:
+          description: System error  
+          body:
+            application/json:
+              type: responseschema
+              example: !include examples/error-response.json
+              
+    /{contactName}:             
+     delete:
+      responses:
+        200:   
+          body:
+            application/json:
+             type: responseschema
+             example: !include examples/success-response.json
+        400:
+          description: Business error       
+          body:
+            application/json:
+              type: responseschema
+              example: !include examples/error-response.json
+        500:
+          description: System error  
+          body:
+            application/json:
+              type: responseschema
+              example: !include examples/error-response.json
+     
+   
+/healthcheck:
+  get:
+    responses:
+      200:
+        description: Success
+        body:
+          application/json:
+            example: | 
+              {
+                "api-status" : "alive"
+              } 
+             

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/apikit http://www.mulesoft.org/schema/mule/apikit/current/mule-apikit.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    <flow name="getContactFlow">
+        <set-variable variableName="uri" value="#[message.inboundProperties.'http.uri.params'.contactName]" doc:name="uriValue"/>
+        <dw:transform-message doc:name="Request to be sent to Database">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+'SELECT * FROM CONTACTS WHERE name = ' ++ flowVars.uri]]></dw:set-payload>
+        </dw:transform-message>
+        <logger message="query sent to database  : #[message.payloadAs(java.lang.String)] " level="INFO" doc:name="Get Database Query"/>
+        <set-payload value="{
+
+	&quot;Identification&quot;: {
+
+		&quot;FirstName&quot;: &quot;Bob&quot;,
+
+		&quot;LastName&quot;: &quot;Frederick&quot;,
+
+		&quot;DOB&quot;: &quot;06/21/1980&quot;,
+
+		&quot;Gender&quot;: &quot;M&quot;,
+
+		&quot;Title&quot;: &quot;Manager&quot;
+
+	},
+
+	&quot;Address&quot;: [{
+
+		&quot;type &quot;: &quot;home&quot;,
+
+		&quot;number&quot;: 1234,
+
+		&quot;street&quot;: &quot;blah blah St&quot;,
+
+		&quot;Unit&quot;: &quot;1 a&quot;,
+
+		&quot;City&quot;: &quot;Somewhere&quot;,
+
+		&quot;State&quot;: &quot;WV&quot;,
+
+		&quot;zipcode&quot;: &quot;12345&quot;
+
+	}],
+
+	&quot;Communication&quot;: [{
+
+			&quot;type&quot;: &quot;email&quot;,
+
+			&quot;value&quot;: &quot;bfe@sample.com&quot;,
+
+	  		&quot;preferred&quot; : &quot;true&quot;
+
+		},
+
+		{
+
+			&quot;type&quot;: &quot;cell&quot;,
+
+			&quot;value&quot;: &quot;304-555-8282&quot;
+
+		}
+
+	]
+
+}" mimeType="application/java" doc:name="Output from Database"/>
+    </flow>
+
+</mule>
