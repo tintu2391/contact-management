@@ -1,0 +1,1 @@
+SELECT * FROM CONTACTS WHERE name = Frederick

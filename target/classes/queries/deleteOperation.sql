@@ -1,0 +1,1 @@
+DELETE * FROM CONTACTS WHERE name = Frederick
